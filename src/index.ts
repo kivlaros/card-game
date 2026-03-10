@@ -1,7 +1,14 @@
-import { Elysia } from "elysia";
+import Elysia from "elysia";
 
-const app = new Elysia().get("/", () => "Hello Elysia").listen(3000);
 
-console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+const app = new Elysia();
+
+app.ws('/ws',{
+  message(ws,message){
+    console.log('я вас не звал')
+    ws.send(message)
+  }
+})
+
+app.listen(3000)
+console.log("Сервер запущен")

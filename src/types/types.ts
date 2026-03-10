@@ -6,6 +6,7 @@ export type CardType =
   | "Spell" // Заклинание
   | "Creature" // Тварь
   | "Treasure" // Сокровище
+  | "Wizard" // Волшебник
   | "Mayhem" // Беспредел
   | "Legend" // Легенда
   | "Location" // Место
