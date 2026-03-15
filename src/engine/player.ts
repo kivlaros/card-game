@@ -2,7 +2,7 @@ import { Card, Player } from "../types/types";
 import { cardTemplates } from "../card-templates/card-templates";
 import { createNewPlayer } from "./utilities/player-creator";
 
-export class playerManager {
+export class PlayerManager {
   player: Player;
   host: boolean;
   playerId: string;

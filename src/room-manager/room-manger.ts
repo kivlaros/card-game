@@ -34,6 +34,8 @@ export class RoomManager {
   // Нужна для быстрой отправки сообщений конкретному игроку
   private playerToConnection = new Map<string, WSConnection>();
 
+  private observer:WSConnection|null = null;
+
   // Генератор уникальных идентификаторов (можно использовать crypto.randomUUID)
   private generateId(): string {
     return crypto.randomUUID();
@@ -70,7 +72,7 @@ export class RoomManager {
         {
           playerId,
           name: playerName,
-          ready: false,
+          ready: true,
         },
       ],
       maxPlayers,
@@ -113,7 +115,7 @@ export class RoomManager {
     const newPlayer = {
       playerId,
       name: playerName,
-      ready: false,
+      ready: true,
     };
 
     room.players.push(newPlayer);
@@ -123,6 +125,9 @@ export class RoomManager {
     ws.data.roomId = roomId;
 
     return room;
+  }
+  becomeObserver(ws: WSConnection){
+    this.observer = ws;
   }
 
   /**
@@ -208,7 +213,9 @@ export class RoomManager {
     // Меняем статус
     room.status = 'playing';
     //room.gameState = initialGameState || {};
+    console.log('Игра Началась')
     if (room && room.status == 'playing'){
+      console.log('Движок Игры Создан')
       new Engine(room,this)
     }
     return room;
