@@ -1,6 +1,10 @@
 import { Room } from "../types/types";
 import { createNewPlayer } from "../engine/utilities/player-creator";
 import { Engine } from "../engine/engine";
+import { EventEmitter } from 'events';
+import { eventBus } from "../engine/utilities/event-bus";
+
+
 export interface GameState {
   // поля игры (зависят от конкретной игры)
 }
@@ -128,6 +132,7 @@ export class RoomManager {
   }
   becomeObserver(ws: WSConnection){
     this.observer = ws;
+    console.log("ОБОЗРЕВАТЕЛЬ ПОДКЛЮЧЕН")
   }
 
   /**
@@ -255,10 +260,23 @@ export class RoomManager {
    * @param excludePlayerId - игрок, которому не отправлять (опционально)
    */
   broadcastToRoom(roomId: string, message: object, excludePlayerId?: string): void {
+
     const room = this.rooms.get(roomId);
     if (!room) return;
 
     const messageStr = JSON.stringify(message);
+    //тестовое условиие
+    if(this.observer){
+      // @ts-ignore
+      if(message.type == 'gamestate'){
+        this.observer.send(messageStr)
+      }
+    }
+     // @ts-ignore
+    if(message.type == 'message'){
+      eventBus.emit('comand', message);
+    }
+    //конец тестового условия
 
     for (const player of room.players) {
       if (player.playerId === excludePlayerId) continue;

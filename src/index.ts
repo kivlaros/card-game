@@ -58,6 +58,13 @@ const app = new Elysia()
           break;
         }
 
+        case 'obs': {
+          // @ts-ignore
+          roomManager.becomeObserver(ws);
+          ws.send({type:'message',st: 'OK'})
+          break;
+        }
+
         case 'ready': {
           const { ready } = data;
           // @ts-ignore
@@ -85,6 +92,18 @@ const app = new Elysia()
             } else {
               ws.send(JSON.stringify({ type: 'error', message: 'Cannot start game' }));
             }
+          }
+          break;
+        }
+
+         case 'message': {
+          // @ts-ignore
+          const room = roomManager.getRoomByConnection(ws);
+          if (room) {
+              roomManager.broadcastToRoom(room.roomId, {
+                type: 'message',
+                message: 'Hiiii',
+              });
           }
           break;
         }
