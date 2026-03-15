@@ -81,10 +81,10 @@ export interface Player {
   name: string; // имя (можно задать при создании)
 
   // Игровые зоны
-  drawDeck: Card[]; // личная колода (перемешана)
-  hand: Card[]; // карты на руке
-  discardPile: Card[]; // личный сброс
-  playArea: Card[]; // карты с Постоянкой, лежащие на столе
+  drawDeck?: Card[]; // личная колода (перемешана)
+  hand?: Card[]; // карты на руке
+  discardPile?: Card[]; // личный сброс
+  playArea?: Card[]; // карты с Постоянкой, лежащие на столе
 
   // Состояние
   health: number; // текущие жизни (макс 25)
@@ -94,7 +94,7 @@ export interface Player {
   // Специальные зоны и жетоны
   familiar?: Card; // фамильяр (ещё не куплен, лежит под планшетом)
   propertyToken?: WizardProperty; // жетон колдунского свойства (пока any)
-  deadTokens: DeadToken[]; // полученные жетоны дохлых колдунов
+  deadTokens?: DeadToken[]; // полученные жетоны дохлых колдунов
 
   // Временные флаги для защиты
   defenseUsed?: boolean; // использовал ли защиту в текущей атаке
@@ -174,7 +174,6 @@ export interface Room {
   maxPlayers: number; // максимум игроков (обычно 2-4)
   status: RoomStatus;
   gameState?: GameState; // если игра начата
-  createdAt: number;
 }
 
 // ==================== Действия (клиент -> сервер) ====================
