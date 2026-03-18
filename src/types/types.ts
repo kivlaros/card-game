@@ -16,29 +16,42 @@ export type CardType =
   | "LimpWand" // Вялая палочка
   | "WildMagic"; // Шальная магия
 
-// Ключевые слова эффектов (пока простые)
+// Ключевые слова эффектов (добавлены новые)
 export type EffectKeyword =
-  | "power" // добавить мощь
-  | "damage" // нанести урон
-  | "draw" // взять карты
-  | "heal" // накрутить жизни
-  | "discard" // сбросить карту
-  | "destroy" // уничтожить карту
-  | "look" // посмотреть верхнюю карту
-  | "mayhem" // специальный эффект беспредела
-  | "groupAttack"; // групповая атака (для легенд)
+  | "power"
+  | "damage"
+  | "draw"
+  | "heal"
+  | "discard"
+  | "destroy"
+  | "look"
+  | "mayhem"
+  | "groupAttack"
+  // новые:
+  | "retrieveFromDiscard"      // взять карту из сброса
+  | "damagePerLegend"          // урон за каждую легенду в сбросе
+  | "damagePerLimpWand"        // урон за каждую вялую палочку
+  | "giveCardFromHandOrDiscard" // отдать карту врагу
+  | "revealHandAndDamage"      // раскрыть руку и нанести урон
+  | "lookAndChoose"            // посмотреть верхнюю карту и выбрать
+  | "discardOpponentCard"      // враг сбрасывает карту
+  | "discardAllHand"           // сбросить всю руку
+  | "drawCards"                // взять карты (уже есть draw, но оставим для ясности)
+  | "ifFirstCard"              // условие "первая карта в ходу"
+  | "moveCardToOpponentDiscard"; // положить карту в сброс атакующего
 
-// Типы целей для эффектов
+// Типы целей (добавлен "attacker")
 export type TargetType =
-  | "self" // сам игрок
-  | "leftEnemy" // левый враг
-  | "rightEnemy" // правый враг
-  | "allEnemies" // все враги
-  | "chosenEnemy" // выбранный враг (требует ввода)
-  | "strongestEnemy" // самый могучий враг (по жизням)
-  | "weakestEnemy" // самый хилый враг
-  | "allPlayers" // все игроки (включая себя)
-  | "mayhemOrder"; // порядок при беспределе (по часовой)
+  | "self"
+  | "leftEnemy"
+  | "rightEnemy"
+  | "allEnemies"
+  | "chosenEnemy"
+  | "strongestEnemy"
+  | "weakestEnemy"
+  | "allPlayers"
+  | "mayhemOrder"
+  | "attacker"; // для защитных эффектов
 
 // ==================== Эффекты карт ====================
 
@@ -55,17 +68,21 @@ export interface CardEffect {
 
 // Шаблон карты (статичные данные)
 export interface CardTemplate {
-  id: string; // уникальный идентификатор шаблона (например, 'acid_dragon')
+  id: string;
   name: string;
   type: CardType;
-  cost: number; // стоимость покупки
-  power?: number; // мощь, которую даёт при розыгрыше
-  victoryPoints?: number; // победные очки (0, если нет)
-  effects: CardEffect[]; // эффекты при розыгрыше
-  isPermanent: boolean; // остаётся ли на столе (Постоянка)
-  // для фамильяров
-  familiarOf?: string; // имя колдуна, которому принадлежит
-  defenseEffect?: CardEffect[]; // эффект при использовании в защите
+  cost: number;
+  power?: number; // базовая мощь (для простых карт, но лучше использовать эффекты)
+  victoryPoints?: number;
+  // Эффекты при различных действиях
+  onPlayEffects?: CardEffect[];   // при розыгрыше
+  attackEffects?: CardEffect[];   // при использовании в атаке
+  defenseEffects?: CardEffect[];  // при использовании в защите
+  // Для обратной совместимости (постепенно заменять на onPlayEffects)
+  effects?: CardEffect[];
+  isPermanent: boolean;
+  familiarOf?: string;
+  // defenseEffect убран, используем defenseEffects
 }
 
 // Экземпляр карты в игре (копия шаблона с уникальным id)
