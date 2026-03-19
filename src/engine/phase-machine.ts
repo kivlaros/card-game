@@ -1,21 +1,38 @@
 import { GamePhase } from '../types/types';
+import { Engine } from './engine';
 
 export class PhaseMachine {
-  constructor(private engine: any) {} // ссылка на Engine
+  engine: Engine
+  constructor(engine:Engine) {
+    this.engine = engine
+  } // ссылка на Engine
 
   canAct(actionType: string): boolean|void {
-    // проверяет, допустимо ли действие в текущей фазе
-    // вход: тип действия (например, 'PLAY_CARD')
-    // выход: boolean
+    let phase = this.getPhase()
+     switch (actionType) {
+      case 'PLAY_CARD':
+      case 'BUY_CARD':
+      case 'END_TURN':
+        return phase === 'playerTurn';
+      case 'DEFEND':
+      case 'DECLINE_DEFEND':
+        return phase === 'awaitingDefense';
+      case 'USE_PROPERTY':
+        // Свойства можно использовать в любой фазе? Пока разрешим в playerTurn
+        return phase === 'playerTurn';
+      default:
+        return false;
+    }
   }
 
   transition(newPhase: GamePhase, data?: any): void {
     // меняет фазу в GameState, генерирует событие 'phaseChanged'
     // вход: новая фаза, опциональные данные
+    this.engine.state.phase = newPhase
     // выход: void
   }
 
   getPhase(): GamePhase|void {
-    // возвращает текущую фазу из GameState
+    return this.engine.state.phase
   }
 }

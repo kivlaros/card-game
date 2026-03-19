@@ -1,37 +1,59 @@
 import { Room } from "../types/types";
-import { GameState, Card, DeadToken } from "../types/types";
+import { GameState, Card, DeadToken, ClientAction, ClientMessage, ServerMessage } from "../types/types";
 import { RoomManager } from "../room-manager/room-manger";
 import { eventBus } from "./utilities/event-bus";
 import { Player } from "./player";
-import { createMultipleInstances, shuffleArray, generateMainDeckCardList } from './utilities/card-utils';
-
+import {
+  createMultipleInstances,
+  shuffleArray,
+  generateMainDeckCardList,
+} from "./utilities/card-utils";
+import { CommandHandler } from "./command-handler";
+import { PhaseMachine } from "./phase-machine";
+import { EffectResolver } from "./effect-resolver";
 
 export class Engine {
   room: Room;
   roomManager: RoomManager;
   state: GameState;
   roomId: string;
+  commandHandler: CommandHandler;
+  phaseMachine: PhaseMachine;
+  effectResolver: EffectResolver;
+  players:Player[] = [];
   constructor(room: Room, roomManager: RoomManager) {
     this.room = room;
     this.roomManager = roomManager;
     this.roomId = room.roomId;
-    const players = room.players.map(p=>new Player(p.playerId,p.name))
-    this.state = this.initializeGameState(players, this.roomId);
-    eventBus.on('comand', this.handleMessage);
+    this.players = room.players.map((p) => new Player(p.playerId, p.name));
+    this.state = this.initializeGameState(this.players, this.roomId);
+    eventBus.on("comand", this.handleMessage);
+    this.commandHandler = new CommandHandler(this);
+    this.phaseMachine = new PhaseMachine(this);
+    this.effectResolver = new EffectResolver(this);
   }
   sendGameState() {
     let message = {
       type: "gamestate",
-      gamestate: this.getGameState()
+      gamestate: this.getGameState(),
     };
     this.roomManager.broadcastToRoom(this.room.roomId, message);
   }
   private handleMessage = (msg: string) => {
-    console.log(`[Receiver] получил: ${msg}`);
-    this.sendGameState()
+    let payload:ClientMessage = JSON.parse(msg);
+    this.commandHandler.handle(payload.playerId,payload.action)
+    this.sendGameState();
   };
 
-   /**
+  getPlayer(playerId:string):Player{
+      return this.players.filter((player)=>playerId)[0]
+  }
+
+  sendToPlayer(playerId:string,payload:ServerMessage){
+    
+  }
+
+  /**
    * Возвращает текущее состояние игры
    */
   getGameState(): GameState {
@@ -43,16 +65,16 @@ export class Engine {
    */
   private initializeGameState(players: Player[], gameId: string): GameState {
     // Основная колода: по 2 экземпляра каждой не-стартовой карты
-    const nonStarterIds = generateMainDeckCardList()
+    const nonStarterIds = generateMainDeckCardList();
     let mainDeckCards: Card[] = [];
-    nonStarterIds.forEach(templateId => {
+    nonStarterIds.forEach((templateId) => {
       const instances = createMultipleInstances(templateId, 2);
       mainDeckCards.push(...instances);
     });
     // Добавляем дополнительные вялые палочки
-    const extraLimpWands = createMultipleInstances('limp_wand', 5);
+    const extraLimpWands = createMultipleInstances("limp_wand", 5);
     mainDeckCards.push(...extraLimpWands);
-    
+
     // Перемешиваем основную колоду
     const shuffledMainDeck = shuffleArray(mainDeckCards);
 
@@ -63,23 +85,23 @@ export class Engine {
     const legendStack: Card[] = [];
 
     // Стопка шальной магии (отдельно)
-    const wildMagicDeck = createMultipleInstances('wild_magic', 5);
+    const wildMagicDeck = createMultipleInstances("wild_magic", 5);
 
     // Стопка вялых палочек (отдельно)
-    const limpWandDeck = createMultipleInstances('limp_wand', 10);
+    const limpWandDeck = createMultipleInstances("limp_wand", 10);
 
     // Пул жетонов дохлых колдунов (пока пустой)
     const deadTokensPool: DeadToken[] = [];
 
     // Порядок ходов — по порядку игроков
-    const turnOrder = players.map(p => p.id);
+    const turnOrder = players.map((p) => p.id);
 
     return {
       gameId,
       players,
       turnOrder,
       currentTurnIndex: 0,
-      phase: 'playerTurn',
+      phase: "playerTurn",
       mainDeck: shuffledMainDeck,
       market,
       legendStack,
@@ -90,7 +112,7 @@ export class Engine {
       grandPrizeHolderId: undefined,
       rlyehControllerId: undefined,
       pendingDefense: undefined,
-      log: ['Игра началась']
+      log: ["Игра началась"],
     };
   }
 }

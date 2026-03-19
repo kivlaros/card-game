@@ -1,9 +1,9 @@
 import { Room } from "../types/types";
 import { createNewPlayer } from "../engine/utilities/player-creator";
 import { Engine } from "../engine/engine";
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 import { eventBus } from "../engine/utilities/event-bus";
-
+import { ReqTypes } from "../types/types";
 
 export interface GameState {
   // поля игры (зависят от конкретной игры)
@@ -21,8 +21,8 @@ export interface GameState {
 interface WSConnection {
   send(message: string): void;
   data: {
-    playerId?: string;  // ID игрока, связанного с этим соединением
-    roomId?: string;    // ID комнаты, в которой находится игрок
+    playerId?: string; // ID игрока, связанного с этим соединением
+    roomId?: string; // ID комнаты, в которой находится игрок
   };
 }
 
@@ -38,7 +38,7 @@ export class RoomManager {
   // Нужна для быстрой отправки сообщений конкретному игроку
   private playerToConnection = new Map<string, WSConnection>();
 
-  private observer:WSConnection|null = null;
+  private observer: WSConnection | null = null;
 
   // Генератор уникальных идентификаторов (можно использовать crypto.randomUUID)
   private generateId(): string {
@@ -58,10 +58,15 @@ export class RoomManager {
    * @returns созданная комната
    * @throws Error, если соединение уже связано с игроком
    */
-  createRoom(ws: WSConnection, roomName: string, playerName: string, maxPlayers: number): Room {
+  createRoom(
+    ws: WSConnection,
+    roomName: string,
+    playerName: string,
+    maxPlayers: number,
+  ): Room {
     // Проверяем, не привязано ли уже соединение к другому игроку
     if (ws.data.playerId) {
-      throw new Error('Connection already has a player');
+      throw new Error("Connection already has a player");
     }
 
     const roomId = this.generateId();
@@ -80,7 +85,7 @@ export class RoomManager {
         },
       ],
       maxPlayers,
-      status: 'waiting',
+      status: "waiting",
     };
 
     // Сохраняем
@@ -103,15 +108,15 @@ export class RoomManager {
    */
   joinRoom(ws: WSConnection, roomId: string, playerName: string): Room | null {
     if (ws.data.playerId) {
-      console.log('Connection already has a player');
-      throw new Error('Connection already has a player');
+      console.log("Connection already has a player");
+      throw new Error("Connection already has a player");
     }
 
     const room = this.rooms.get(roomId);
     if (!room) return null;
 
     // Проверяем, можно ли присоединиться
-    if (room.status !== 'waiting') return null;
+    if (room.status !== "waiting") return null;
     if (room.players.length >= room.maxPlayers) return null;
 
     // Создаём нового игрока
@@ -130,9 +135,9 @@ export class RoomManager {
 
     return room;
   }
-  becomeObserver(ws: WSConnection){
+  becomeObserver(ws: WSConnection) {
     this.observer = ws;
-    console.log("ОБОЗРЕВАТЕЛЬ ПОДКЛЮЧЕН")
+    console.log("ОБОЗРЕВАТЕЛЬ ПОДКЛЮЧЕН");
   }
 
   /**
@@ -155,7 +160,7 @@ export class RoomManager {
     }
 
     // Удаляем игрока из списка
-    const playerIndex = room.players.findIndex(p => p.playerId === playerId);
+    const playerIndex = room.players.findIndex((p) => p.playerId === playerId);
     if (playerIndex !== -1) {
       room.players.splice(playerIndex, 1);
 
@@ -192,7 +197,7 @@ export class RoomManager {
     const room = this.rooms.get(roomId);
     if (!room) return null;
 
-    const player = room.players.find(p => p.playerId === playerId);
+    const player = room.players.find((p) => p.playerId === playerId);
     if (player) {
       player.ready = ready;
     }
@@ -211,17 +216,17 @@ export class RoomManager {
     if (!room) return null;
 
     // Проверяем условия старта
-    if (room.status !== 'waiting') return null;
+    if (room.status !== "waiting") return null;
     if (room.players.length < 2) return null; // минимум 2 игрока
-    if (!room.players.every(p => p.ready)) return null; // не все готовы
+    if (!room.players.every((p) => p.ready)) return null; // не все готовы
 
     // Меняем статус
-    room.status = 'playing';
+    room.status = "playing";
     //room.gameState = initialGameState || {};
-    console.log('Игра Началась')
-    if (room && room.status == 'playing'){
-      console.log('Движок Игры Создан')
-      new Engine(room,this)
+    console.log("Игра Началась");
+    if (room && room.status == "playing") {
+      console.log("Движок Игры Создан");
+      new Engine(room, this);
     }
     return room;
   }
@@ -233,7 +238,7 @@ export class RoomManager {
   finishGame(roomId: string): void {
     const room = this.rooms.get(roomId);
     if (room) {
-      room.status = 'finished';
+      room.status = "finished";
     }
   }
 
@@ -259,22 +264,32 @@ export class RoomManager {
    * @param message - объект, который будет сериализован в JSON
    * @param excludePlayerId - игрок, которому не отправлять (опционально)
    */
-  broadcastToRoom(roomId: string, message: object, excludePlayerId?: string): void {
-
+  broadcastToRoom(
+    roomId: string,
+    message: object,
+    author?: string,
+    excludePlayerId?: string,
+  ): void {
     const room = this.rooms.get(roomId);
     if (!room) return;
 
     const messageStr = JSON.stringify(message);
     //тестовое условиие
-    if(this.observer){
+    if (this.observer) {
       // @ts-ignore
-      if(message.type == 'gamestate'){
-        this.observer.send(messageStr)
+      if (message.type == "gamestate") {
+        this.observer.send(messageStr);
       }
     }
-     // @ts-ignore
-    if(message.type == 'message'){
-      eventBus.emit('comand', message);
+    if (author) {
+      let payload = {
+        playerId: author,
+        action: message
+      }
+      // @ts-ignore
+      if (Object.values(ReqTypes).includes(message.type)) {
+        eventBus.emit("comand", JSON.stringify(payload));
+      }
     }
     //конец тестового условия
 
@@ -285,7 +300,10 @@ export class RoomManager {
         try {
           conn.send(messageStr);
         } catch (err) {
-          console.error(`Failed to send message to player ${player.playerId}:`, err);
+          console.error(
+            `Failed to send message to player ${player.playerId}:`,
+            err,
+          );
         }
       }
     }

@@ -1,13 +1,28 @@
 import { ClientAction } from '../types/types';
 import { Player } from './player';
+import { Engine } from './engine';
 
 export class CommandHandler {
-  constructor(private engine: any) {} // ссылка на Engine
+  engine: Engine
+    constructor(engine:Engine) {
+      this.engine = engine
+    } // ссылка на Engine
 
   handle(playerId: string, action: ClientAction): void {
     // главный метод, диспатчит по типу действия
+    const player = this.engine.getPlayer(playerId)
+    if(this.engine.phaseMachine.canAct(action.type)&&this.isPlayerTurn(playerId)){
+      console.log(playerId)
+      console.log(action)
+    }else{
+      //вернуть ошибку
+    }
     // проверяет фазу через engine.phaseMachine.canAct
     // вызывает соответствующий private метод
+  }
+
+  private isPlayerTurn(playerId:string):boolean{
+    return playerId == this.engine.state.turnOrder[this.engine.state.currentTurnIndex]
   }
 
   private playCard(playerId: string, payload: { cardInstanceId: string; targetPlayerId?: string }): void {

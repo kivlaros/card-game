@@ -240,3 +240,17 @@ export interface InputRequest {
   context: any; // данные, специфичные для запроса
   timeoutMs: number; // сколько миллисекунд ждать ответ
 }
+
+export type ClientMessage = {
+  playerId:string,
+  action: ClientAction
+}
+
+export const ReqTypes = {
+  PLAY_CARD: 'PLAY_CARD',
+  BUY_CARD: 'BUY_CARD',
+  DEFEND: 'DEFEND',
+  END_TURN: 'END_TURN',
+  DECLINE_DEFEND: 'DECLINE_DEFEND',
+  USE_PROPERTY: 'USE_PROPERTY'
+}
