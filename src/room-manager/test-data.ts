@@ -19,3 +19,5 @@ export const testDataRoom:Room = {
       maxPlayers: 4,
       status: "waiting"
     }
+
+export const stateArray = ['PLAY_CARD','BUY_CARD','DEFEND','DECLINE_DEFEND','END_TURN','USE_PROPERTY']    
