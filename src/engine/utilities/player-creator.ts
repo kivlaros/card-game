@@ -10,7 +10,8 @@ export function createNewPlayer(playerId:string, playerName:string):Player{
   drawDeck: [], // личная колода (перемешана)
   hand: [], // карты на руке
   discardPile: [], // личный сброс
-  playArea: [], // карты с Постоянкой, лежащие на столе
+  permanentArea: [], // карты с Постоянкой, лежащие на столе
+  playArea: [], // карты сыгранные лежащие на столе
 
   // Состояние
   health: 20, // текущие жизни (макс 25)

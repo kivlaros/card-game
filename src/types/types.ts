@@ -38,7 +38,17 @@ export type EffectKeyword =
   | "discardAllHand"           // сбросить всю руку
   | "drawCards"                // взять карты (уже есть draw, но оставим для ясности)
   | "ifFirstCard"              // условие "первая карта в ходу"
-  | "moveCardToOpponentDiscard"; // положить карту в сброс атакующего
+  | "moveCardToOpponentDiscard" // положить карту в сброс атакующего
+  | "discardSelf"               // сбросить эту карту (для защиты)
+  | "giveLimpWand"              // дать врагу карту "Вялая палочка"
+  | "lookAndHealByCost"         // раскрыть карту и накрутить жизни по её стоимости
+  | "destroyFromHandOrDiscard"   // уничтожить карту из руки или сброса
+  | "putNextPurchasedOnTop"      // следующую купленную карту положить наверх колоды
+  | "destroyFromDiscard"         // уничтожить карту из своего сброса
+  | "retrieveSpellFromDiscard"   // взять заклинание из своего сброса
+  | "powerPerDeadToken"          // мощь, уменьшаемая на число жетонов дохлых колдунов
+  | "revealTopAndDiscard"        // раскрыть верхнюю карту врага и опционально сбросить
+  | "damageWeakerEnemies";       // урон врагам с меньшим здоровьем
 
 // Типы целей (добавлен "attacker")
 export type TargetType =
@@ -62,6 +72,7 @@ export interface CardEffect {
   optional?: boolean; // для карт с выбором (например, Шальная магия)
   condition?: string; // условие (упрощённо, позже расширим)
   then?: CardEffect[]; // вложенные эффекты
+  cardId?: string;
 }
 
 // ==================== Карты (шаблон и экземпляр) ====================
@@ -101,7 +112,8 @@ export interface Player {
   drawDeck?: Card[]; // личная колода (перемешана)
   hand?: Card[]; // карты на руке
   discardPile?: Card[]; // личный сброс
-  playArea?: Card[]; // карты с Постоянкой, лежащие на столе
+  permanentArea?: Card[]; // карты с Постоянкой, лежащие на столе
+  playArea?: Card[]; // карты сыгранные лежащие на столе
 
   // Состояние
   health: number; // текущие жизни (макс 25)

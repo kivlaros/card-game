@@ -8,6 +8,7 @@ export class Player implements PlayerInterface {
   drawDeck: Card[];
   hand: Card[];
   discardPile: Card[];
+  permanentArea: Card[];
   playArea: Card[];
   health: number;
   maxHealth: number;
@@ -24,8 +25,9 @@ export class Player implements PlayerInterface {
     this.maxHealth = 25;
     this.powerThisTurn = 0;
     this.deadTokens = [];
-    this.playArea = [];
+    this.permanentArea = [];
     this.discardPile = [];
+    this.playArea = [];
 
     // Инициализация начальной колоды: 6 знаков, 3 пшика, 1 палочка
     const starterSigns = createMultipleInstances('sign', 6, this.id);
@@ -86,6 +88,13 @@ export class Player implements PlayerInterface {
     return true;
   }
 
+  discardFromHandtoPlayArea(cardInstanceId: string):Card{
+    const index = this.hand.findIndex(c => c.instanceId === cardInstanceId);
+    const [card] = this.hand.splice(index, 1);
+    this.playArea.push(card);
+    return card
+  }
+
   /**
    * Добавляет карту напрямую в сброс (например, купленную или полученную).
    */
@@ -140,19 +149,19 @@ export class Player implements PlayerInterface {
   // ---------- Постоянки и фамильяр ----------
 
   /**
-   * Добавляет карту в зону постоянок (playArea).
+   * Добавляет карту в зону постоянок (permanentArea).
    */
-  addToPlayArea(card: Card): void {
-    this.playArea.push(card);
+  addTopermanentArea(card: Card): void {
+    this.permanentArea.push(card);
   }
 
   /**
    * Удаляет карту из зоны постоянок (например, при уничтожении).
    */
-  removeFromPlayArea(cardInstanceId: string): boolean {
-    const index = this.playArea.findIndex(c => c.instanceId === cardInstanceId);
+  removeFrompermanentArea(cardInstanceId: string): boolean {
+    const index = this.permanentArea.findIndex(c => c.instanceId === cardInstanceId);
     if (index === -1) return false;
-    this.playArea.splice(index, 1);
+    this.permanentArea.splice(index, 1);
     return true;
   }
 
@@ -172,6 +181,10 @@ export class Player implements PlayerInterface {
     this.addToDiscard(this.familiar);
     this.familiar = undefined;
     return true;
+  }
+
+  isCardInHand(cardInstanceId: string):boolean{
+    return this.hand.find((el)=>el.instanceId==cardInstanceId)?true:false
   }
 
   // ---------- Жетоны ----------
@@ -200,8 +213,8 @@ export class Player implements PlayerInterface {
     return [...this.discardPile];
   }
 
-  getPlayArea(): Card[] {
-    return [...this.playArea];
+  getpermanentArea(): Card[] {
+    return [...this.permanentArea];
   }
 
   getDeadTokens(): DeadToken[] {

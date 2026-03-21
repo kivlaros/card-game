@@ -13,7 +13,7 @@ export class CommandHandler {
     const player = this.engine.getPlayer(playerId);
     if (
       this.engine.phaseMachine.canAct(action.type) &&
-      this.isPlayerTurn(playerId)
+      this.isPlayerTurn(playerId, action.type)
     ) {
       console.log(playerId);
       console.log(action);
@@ -52,19 +52,30 @@ export class CommandHandler {
     // вызывает соответствующий private метод
   }
 
-  private isPlayerTurn(playerId: string): boolean {
-    return (
-      playerId ==
-      this.engine.state.turnOrder[this.engine.state.currentTurnIndex]
-    );
+  private isPlayerTurn(playerId: string, actionType: string): boolean {
+    if (
+      actionType == "PLAY_CARD" ||
+      actionType == "BUY_CARD" ||
+      actionType == "END_TURN"
+    ) {
+      return (
+        playerId ==
+        this.engine.state.turnOrder[this.engine.state.currentTurnIndex]
+      );
+    } else return true;
   }
 
   private playCard(
     playerId: string,
     payload: { cardInstanceId: string; targetPlayerId?: string },
   ): void {
+    const player = this.engine.getPlayer(playerId);
     // проверяет, что карта есть в руке игрока
-    // удаляет карту из руки (player.discardFromHand)
+    if(player.isCardInHand(payload.cardInstanceId)){
+      const card = player.discardFromHandtoPlayArea(payload.cardInstanceId)
+      // вызывает engine.effectResolver.resolve(player, card, payload.targetPlayerId)
+      this.engine.effectResolver.resolve(player, card, payload.targetPlayerId)
+    }
     // вызывает engine.effectResolver.resolve(player, card, payload.targetPlayerId)
     // после разрешения (асинхронно) обновляет состояние и отправляет broadcast
   }
